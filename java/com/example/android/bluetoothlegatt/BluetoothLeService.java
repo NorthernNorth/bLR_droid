@@ -61,7 +61,7 @@ public class BluetoothLeService extends Service {
     public final static String ACTION_DATA_AVAILABLE =
             "com.example.bluetooth.le.ACTION_DATA_AVAILABLE";
     public final static String ACTION_UARTTx_DATA_AVAILABLE =
-            "ACTION_UARTTx_DATA_AVAILABLE";
+            "com.example.bluetooth.le.ACTION_UARTTx_DATA_AVAILABLE";
     public final static String EXTRA_DATA =
             "com.example.bluetooth.le.EXTRA_DATA";
 
@@ -114,12 +114,13 @@ public class BluetoothLeService extends Service {
         public void onCharacteristicChanged(BluetoothGatt gatt,
                                             BluetoothGattCharacteristic characteristic) {
             Log.d(TAG, "Characteristic changed!!!!!");
+            Log.d(TAG, characteristic.getUuid().toString());
 
             //UARTTx
-            //if (characteristic.getUuid() == UUID.fromString("6e400002-b5a3-f393-e0a9-e50e24dcca9e")){
+            if (characteristic.getUuid().toString().equals("6e400002-b5a3-f393-e0a9-e50e24dcca9e")){
                 Log.d(TAG, "UARTTx changed!!!");
-                broadcastUpdate(ACTION_DATA_AVAILABLE, characteristic);
-            //}
+                broadcastUpdate(ACTION_UARTTx_DATA_AVAILABLE, characteristic);
+            }
         }
     };
 

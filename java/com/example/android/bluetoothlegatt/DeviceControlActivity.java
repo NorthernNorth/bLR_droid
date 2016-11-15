@@ -116,11 +116,10 @@ public class DeviceControlActivity extends Activity {
                 //displayGattServices(mBluetoothLeService.getSupportedGattServices());
                 showData();
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
+                displayData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA), mDataField);
+            } else if (BluetoothLeService.ACTION_UARTTx_DATA_AVAILABLE.equals(action)) {
                 displayData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA), mUART);
             }
-//            else if (BluetoothLeService.ACTION_UARTTx_DATA_AVAILABLE.equals(action)) {
-//                displayData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA), mUART);
-//            }
 
         }
     };
@@ -401,6 +400,7 @@ public class DeviceControlActivity extends Activity {
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
         intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
+        intentFilter.addAction(BluetoothLeService.ACTION_UARTTx_DATA_AVAILABLE);
         return intentFilter;
     }
 }
