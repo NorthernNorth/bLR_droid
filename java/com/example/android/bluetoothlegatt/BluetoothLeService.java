@@ -35,6 +35,7 @@ import android.util.Log;
 import java.util.List;
 import java.util.UUID;
 
+
 /**
  * Service for managing connection and data communication with a GATT server hosted on a
  * given Bluetooth LE device.
@@ -62,6 +63,8 @@ public class BluetoothLeService extends Service {
             "com.example.bluetooth.le.ACTION_DATA_AVAILABLE";
     public final static String ACTION_UARTTx_DATA_AVAILABLE =
             "com.example.bluetooth.le.ACTION_UARTTx_DATA_AVAILABLE";
+    public final static String ACTION_ACCEL_DATA_AVAILABLE =
+            "com.example.bluetooth.le.ACTION_ACCEL_DATA_AVAILABLE";
     public final static String EXTRA_DATA =
             "com.example.bluetooth.le.EXTRA_DATA";
 
@@ -121,6 +124,12 @@ public class BluetoothLeService extends Service {
                 Log.d(TAG, "UARTTx changed!!!");
                 broadcastUpdate(ACTION_UARTTx_DATA_AVAILABLE, characteristic);
             }
+
+            //Accelerometer
+            if (characteristic.getUuid().toString().equals("e95dca4b-251d-470a-a062-fa1922dfa9a8")){
+                Log.d(TAG, "Accelerometer changed!!!");
+                broadcastUpdate2(ACTION_ACCEL_DATA_AVAILABLE, characteristic);
+            }
         }
     };
 
@@ -129,6 +138,7 @@ public class BluetoothLeService extends Service {
         sendBroadcast(intent);
     }
 
+    //for UARTTx
     private void broadcastUpdate(final String action,
                                  final BluetoothGattCharacteristic characteristic) {
         Log.d(TAG, "LW1");
@@ -164,9 +174,20 @@ public class BluetoothLeService extends Service {
 
         final String data = characteristic.getStringValue(0);
         intent.putExtra(EXTRA_DATA,data);
+
         Log.d(TAG, "LW3");
         sendBroadcast(intent);
         Log.d(TAG, "LW4");
+    }
+
+    //for accelerometer
+    private void broadcastUpdate2(final String action,
+                                 final BluetoothGattCharacteristic characteristic) {
+
+        final Intent intent = new Intent(action);
+        final byte[] data = characteristic.getValue();
+        intent.putExtra(EXTRA_DATA,data);
+        sendBroadcast(intent);
     }
 
     public class LocalBinder extends Binder {

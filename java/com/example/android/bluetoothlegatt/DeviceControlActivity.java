@@ -39,6 +39,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
+import java.lang.Thread;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+
 
 /**
  * For a given BLE device, this Activity provides the user interface to connect, display data,
@@ -119,6 +123,8 @@ public class DeviceControlActivity extends Activity {
                 displayData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA), mDataField);
             } else if (BluetoothLeService.ACTION_UARTTx_DATA_AVAILABLE.equals(action)) {
                 displayData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA), mUART);
+            } else if (BluetoothLeService.ACTION_ACCEL_DATA_AVAILABLE.equals(action)) {
+                displayData2(intent.getByteArrayExtra(BluetoothLeService.EXTRA_DATA));
             }
 
         }
@@ -307,9 +313,31 @@ public class DeviceControlActivity extends Activity {
         });
     }
 
+    //for uart tx
     private void displayData(String data, TextView data_field) {
         if (data != null) {
             data_field.setText(data);
+        }
+    }
+
+    //for accelerometer
+    private void displayData2(byte[] data) {
+        if (data != null) {
+            //format the data
+            byte[] x_bytes = new byte[2];
+            byte[] y_bytes = new byte[2];
+            byte[] z_bytes = new byte[2];
+            System.arraycopy(data, 0, x_bytes, 0, 2);
+            System.arraycopy(data, 2, y_bytes, 0, 2);
+            System.arraycopy(data, 4, z_bytes, 0, 2);
+
+            short raw_x = ByteBuffer.wrap(x_bytes).order(ByteOrder.LITTLE_ENDIAN).getShort();
+            short raw_y = ByteBuffer.wrap(y_bytes).order(ByteOrder.LITTLE_ENDIAN).getShort();
+            short raw_z = ByteBuffer.wrap(z_bytes).order(ByteOrder.LITTLE_ENDIAN).getShort();
+
+            mX.setText(""+raw_x);
+            mY.setText(""+raw_y);
+            mZ.setText(""+raw_z);
         }
     }
 
@@ -373,13 +401,22 @@ public class DeviceControlActivity extends Activity {
     private void showData(){
         //set up UART indication
         BluetoothGattService UARTservice = mBluetoothLeService.obtainService("6e400001-b5a3-f393-e0a9-e50e24dcca9e");
-        if (UARTservice == null) Log.d(TAG, "null service");
-        else Log.d(TAG, "service");
+//        if (UARTservice == null) Log.d(TAG, "null service");
+//        else Log.d(TAG, "service");
 
         BluetoothGattCharacteristic UARTTx = UARTservice.getCharacteristic(UUID.fromString("6e400002-b5a3-f393-e0a9-e50e24dcca9e"));
-        Log.d(TAG, "character");
+//        Log.d(TAG, "character");
         mBluetoothLeService.setCharacteristicNotification(UARTTx, true, true);
-        Log.d(TAG, "set notification");
+//        Log.d(TAG, "set notification");
+        //need some delay here because the gatt api does not support queueing >> need to wait till the first descriptor has been written;
+        try {
+            Thread.sleep(2000);
+        } catch (Exception e) {
+        }
+
+        BluetoothGattService ACCELservice = mBluetoothLeService.obtainService("e95d0753-251d-470a-a062-fa1922dfa9a8");
+        BluetoothGattCharacteristic A_data_charac = ACCELservice.getCharacteristic(UUID.fromString("e95dca4b-251d-470a-a062-fa1922dfa9a8"));
+        mBluetoothLeService.setCharacteristicNotification(A_data_charac, true, false);
 
 //
 //        if ((charaProp | BluetoothGattCharacteristic.PROPERTY_INDICATE) > 0) {
@@ -401,6 +438,8 @@ public class DeviceControlActivity extends Activity {
         intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
         intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
         intentFilter.addAction(BluetoothLeService.ACTION_UARTTx_DATA_AVAILABLE);
+        intentFilter.addAction(BluetoothLeService.ACTION_ACCEL_DATA_AVAILABLE);
+
         return intentFilter;
     }
 }
